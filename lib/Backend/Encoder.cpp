@@ -1002,22 +1002,42 @@ void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t cod
         Fatal();
     }
 }
+/*
+__attribute__ ((target ("sse4.2")))
+uint64_t simd_mm_crc32_u64 (
+   uint64_t crc,
+   uint64_t v
+){
+    return _mm_crc32_u64(crc,v);
+}
+*/
+uint64_t simd_mm_crc32_u64 (
+   uint64_t crc,
+   uint64_t v
+){
+    uint64_t tmp;
+    tmp=crc;
+    __asm__ __volatile__("crc32q %1, %0" : "+r" (tmp): "r" (v));
+    return tmp;
+}
 
 uint Encoder::CalculateCRC(uint bufferCRC, size_t data)
 {
-#if defined(_WIN32) || defined(__SSE4_2__)
+#if defined(_WIN32)
 #if defined(_M_IX86)
     if (AutoSystemInfo::Data.SSE4_2Available())
     {
         return _mm_crc32_u32(bufferCRC, data);
     }
-#elif defined(_M_X64)
+#endif
+#endif
+
+#if defined(_M_X64)
     if (AutoSystemInfo::Data.SSE4_2Available())
     {
         //CRC32 always returns a 32-bit result
-        return (uint)_mm_crc32_u64(bufferCRC, data);
+        return (uint)simd_mm_crc32_u64(bufferCRC, data);
     }
-#endif
 #endif
     return CalculateCRC32(bufferCRC, data);
 }

@@ -144,6 +144,18 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
+/*
+    __attribute__ ((target ("sse4.1")))
+    __m128i simd_mm_max_epi8(__m128i a, __m128i b){
+        return  _mm_max_epi8(a, b);
+    }
+*/
+    __m128i simd_mm_max_epi8(__m128i a, __m128i b){
+        __m128i tmp;
+        tmp=a;
+        __asm__ __volatile__("pmaxsb %1, %0" : "+x" (tmp): "x" (b));
+        return tmp;
+    }
 
     SIMDValue SIMDInt8x16Operation::OpLessThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
     {
@@ -152,7 +164,7 @@ namespace Js
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
         if (AutoSystemInfo::Data.SSE4_1Available())
         {
-            x86Result.m128i_value = _mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value);  //  max(a,b) == a
+            x86Result.m128i_value = simd_mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value);  //  max(a,b) == a
             x86Result.m128i_value = _mm_cmpeq_epi8(tmpbValue.m128i_value, x86Result.m128i_value); //
         }
         else
@@ -207,7 +219,7 @@ namespace Js
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
         if (AutoSystemInfo::Data.SSE4_1Available())
         {
-            x86Result.m128i_value = _mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value);  //  max(a,b) == b
+            x86Result.m128i_value = simd_mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value);  //  max(a,b) == b
             x86Result.m128i_value = _mm_cmpeq_epi8(tmpaValue.m128i_value, x86Result.m128i_value); //
         }
         else

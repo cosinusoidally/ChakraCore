@@ -77,6 +77,18 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
+/*
+    __attribute__ ((target ("ssse3")))
+    __m128i simd_mm_abs_epi32(__m128i input){
+        return _mm_abs_epi32(input);
+    }
+*/
+    __m128i simd_mm_abs_epi32(__m128i input){
+        __m128i tmp;
+        tmp=input;
+        __asm__ __volatile__("pabsd %1, %0" : "+x" (tmp): "x" (input));
+        return tmp;
+    }
 
     // Unary Ops
     SIMDValue SIMDInt32x4Operation::OpAbs(const SIMDValue& value)
@@ -87,7 +99,7 @@ namespace Js
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
         if (AutoSystemInfo::Data.SSE3Available())
         {
-            x86Result.m128i_value = _mm_abs_epi32(v.m128i_value); // only available after SSE3
+            x86Result.m128i_value = simd_mm_abs_epi32(v.m128i_value); // only available after SSE3
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
         else

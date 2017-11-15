@@ -166,7 +166,6 @@ endif()
 set(CLR_CMAKE_PLATFORM_XPLAT 1)
 if(CC_TARGETS_AMD64)
     add_definitions(-D_M_X64_OR_ARM64)
-    add_compile_options(-msse4.2)
 
     if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
         set(CAN_BUILD_WABT 1)
@@ -175,7 +174,7 @@ elseif(CC_TARGETS_X86)
     add_definitions(-D__i686__)
     add_definitions(-D_M_IX86_OR_ARM32)
     add_compile_options(-arch i386)
-    add_compile_options(-msse3)
+    add_compile_options(-msse2)
 
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} \
         -m32"

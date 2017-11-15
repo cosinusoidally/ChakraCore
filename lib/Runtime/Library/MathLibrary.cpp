@@ -337,6 +337,18 @@ namespace Js
 
 #pragma warning(push)
 #pragma warning(disable:4700)    // uninitialized local variable 'output' used,  for call to _mm_ceil_sd
+/*
+    __attribute__ ((target ("sse4.1")))
+    __m128d simd_mm_ceil_sd(__m128d a, __m128d b){
+        return _mm_ceil_sd(a,b);
+    }
+*/
+    __m128d simd_mm_ceil_sd(__m128d a, __m128d b){
+        __m128i tmp;
+        tmp=a;
+        __asm__ __volatile__("roundsd $0x2, %1, %0" : "+x" (tmp): "x" (b));
+        return tmp;
+    }
 
     Var Math::Ceil(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -366,12 +378,12 @@ namespace Js
 #endif
 
 #if (defined(_M_IX86) || defined(_M_X64)) \
-    && (__SSE4_1__ || _WIN32) // _mm_ceil_sd needs this
+    && (defined(_M_X64) || _WIN32) // _mm_ceil_sd needs this
             if (AutoSystemInfo::Data.SSE4_1Available())
             {
                 __m128d input, output;
                 input = _mm_load_sd(&x);
-                output = _mm_ceil_sd(input, input);
+                output = simd_mm_ceil_sd(input, input);
                 int intResult = _mm_cvtsd_si32(output);
 
                 if (TaggedInt::IsOverflow(intResult) || intResult == 0 || intResult == 0x80000000)
